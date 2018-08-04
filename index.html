@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Compo</title>
+
+    <!-- Libraries -->
+    <script type="text/javascript" src="lib/phaser.min.js"></script>
+
+    <!-- Game code -->
+    <script type="text/javascript" src="src/gameplay.js"></script>
+    <script type="text/javascript" src="src/main.js"></script>
+
+    <style>
+      body {
+        margin: 0px;
+
+        background-color: gray;
+      }
+
+      canvas {
+        -ms-interpolation-mode: nearest-neighbor; // IE 7+ (non-standard property)
+        image-rendering: -webkit-optimize-contrast; // Safari 6, UC Browser 9.9
+        image-rendering: -webkit-crisp-edges; // Safari 7+
+        image-rendering: -moz-crisp-edges; // Firefox 3.6+
+        image-rendering: -o-crisp-edges; // Opera 12
+        image-rendering: pixelated; // Chrome 41+ and Opera 26+
+      }
+    </style>
+
+    </head>
+
+    <body>
+      <script type="text/javascript">
+        main();
+      </script>
+    </body>
+</html>

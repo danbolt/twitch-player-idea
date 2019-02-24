@@ -36,7 +36,7 @@ Preload.prototype.create = function() {
 
 
 var main = function () {
-	console.log('hello, agbic! 😊');
+	console.log('hello, gameplay! 😊');
 
 	var game = new Phaser.Game(640, 480);
 	game.state.add('Preload', Preload, false);

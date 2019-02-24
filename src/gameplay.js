@@ -1,4 +1,15 @@
 
+// angleLerp taken from:
+// https://gist.github.com/shaunlebron/8832585
+function shortAngleDist(a0,a1) {
+    var max = Math.PI*2;
+    var da = (a1 - a0) % max;
+    return 2*da % max - da;
+};
+function angleLerp(a0,a1,t) {
+    return a0 + shortAngleDist(a0,a1)*t;
+};
+
 const PlayerMoveSpeed = 210.0;
 const PlayerBurstSpeed = 270.0;
 const PlayerBurstDecayTime = 230;
@@ -16,6 +27,13 @@ var Player = function(game, x, y) {
 
   this.game.physics.enable(this, Phaser.Physics.ARCADE);
   this.anchor.set(0.5, 0.5);
+
+  /*
+  this.game.input.gamepad.pad1.onAxisCallback = (pad) => {
+    this.data.moveDirection.x = pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
+    this.data.moveDirection.y = pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
+  };
+  */
 }
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
@@ -58,8 +76,7 @@ Player.prototype.updateVelocityFromDirection = function() {
 
   if (currentDirectionLengthSqr > Epsilon) {
     const targetRotation = Math.atan2(this.data.moveDirection.y, this.data.moveDirection.x);
-    this.rotation = Phaser.Math.linear(this.rotation, targetRotation, 0.4);
-    this.rotation = Phaser.Math.wrapAngle(this.rotation, true);
+    this.rotation = angleLerp(this.rotation, targetRotation, 0.18);
   }
 
   this.body.velocity.x = this.data.moveSpeed * this.data.moveDirection.x;

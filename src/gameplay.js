@@ -16,9 +16,12 @@ const PlayerBurstDecayTime = 230;
 const PlayerStrikeSpeed = 800;
 const PlayerStrikeDecayTime = 40;
 const PlayerStrikeTime = 70;
+const PlayerStrikeStaminaCost = 0.35;
 const PlayerBackstepSpeed = -600;
 const PlayerBackstepDecayTime = 100;
 const PlayerBackstepTime = 50;
+const PlayerBackstepStaminaCost = 0.21;
+const PlayerStaminaReplenishRate = 0.00025;
 
 const Epsilon = 0.0001;
 
@@ -40,20 +43,18 @@ var Player = function(game, x, y) {
   this.data.burstTween = null;
   this.data.movementTween = null;
   this.data.state = PlayerState.NORMAL;
+  this.data.stamina = 1.0;
 
   this.game.physics.enable(this, Phaser.Physics.ARCADE);
   this.anchor.set(0.5, 0.5);
 
-  /*
-  this.game.input.gamepad.pad1.onAxisCallback = (pad) => {
-    this.data.moveDirection.x = pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
-    this.data.moveDirection.y = pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
-  };
-  */
-
-  var generateStrikeStepCallback = (newState, newSpeed, newTime, newDecayTime) => {
+  var generateStrikeStepCallback = (cost, newState, newSpeed, newTime, newDecayTime) => {
     return () => {
       if (this.data.state !== PlayerState.NORMAL) {
+        return;
+      }
+
+      if (this.data.stamina < cost) {
         return;
       }
 
@@ -62,6 +63,7 @@ var Player = function(game, x, y) {
         this.data.burstTween = null;
       }
 
+      this.data.stamina -= cost;
       this.data.state = newState;
       this.data.moveSpeed = newSpeed;
       this.data.movementTween = this.game.add.tween(this.data);
@@ -78,8 +80,8 @@ var Player = function(game, x, y) {
       this.data.moveDirection.y = Math.sin(this.rotation);
     };
   };
-  var strikeCallback = generateStrikeStepCallback(PlayerState.STRIKE, PlayerStrikeSpeed, PlayerStrikeTime, PlayerStrikeDecayTime);
-  var backstepCallback = generateStrikeStepCallback(PlayerState.BACKSTEP, PlayerBackstepSpeed, PlayerBackstepTime, PlayerBackstepDecayTime);
+  var strikeCallback = generateStrikeStepCallback(PlayerStrikeStaminaCost, PlayerState.STRIKE, PlayerStrikeSpeed, PlayerStrikeTime, PlayerStrikeDecayTime);
+  var backstepCallback = generateStrikeStepCallback(PlayerBackstepStaminaCost, PlayerState.BACKSTEP, PlayerBackstepSpeed, PlayerBackstepTime, PlayerBackstepDecayTime);
 
   this.game.input.keyboard.addKey(Phaser.KeyCode.X).onDown.add(strikeCallback);
   this.game.input.keyboard.addKey(Phaser.KeyCode.C).onDown.add(backstepCallback);
@@ -137,17 +139,51 @@ Player.prototype.update = function() {
   this.updateDirectionFromInput();
   this.updateVelocityFromDirection();
 
+  if (this.data.state === PlayerState.NORMAL) {
+    this.tint = 0xFFFFFF;
+  } else if (this.data.state === PlayerState.STRIKE) {
+    this.tint = 0xFF0000;
+  } else if (this.data.state === PlayerState.BACKSTEP) {
+    this.tint = 0x0000FF;
+  }
+
+  this.data.stamina = Math.min((PlayerStaminaReplenishRate * this.game.time.elapsed) + this.data.stamina, 1.0);
 };
+
+
+
+const StaminaBarWidth = 96;
+const StaminaBarHeight = 16;
 
 var Gameplay = function () {
   this.player = null;
+  this.ui = null;
+  this.staminaBarBacking = null;
+  this.staminaBar = null;
 };
 Gameplay.prototype.shutdown = function() {
   this.player = null;
+  this.ui = null;
+  this.staminaBarBacking = null;
+  this.staminaBar = null;
 };
 Gameplay.prototype.create = function() {
-  this.player = new Player(this.game, 100, 100);
+  this.player = new Player(this.game, this.game.width * 0.5, this.game.height * 0.5);
+
+  this.ui = this.game.add.group();
+  this.ui.fixedToCamera = true;
+
+  this.staminaBarBacking = this.game.add.sprite(32, 32, 'test_sheet', 17);
+  this.staminaBarBacking.tint = 0x999999;
+  this.staminaBarBacking.width = StaminaBarWidth;
+  this.staminaBarBacking.height = StaminaBarHeight;
+  this.ui.addChild(this.staminaBarBacking);
+  this.staminaBar = this.game.add.sprite(34, 34, 'test_sheet', 17);
+  this.staminaBar.tint = 0x00FF00;
+  this.staminaBar.width = StaminaBarWidth - 4;
+  this.staminaBar.height = StaminaBarHeight - 4;
+  this.ui.addChild(this.staminaBar);
 };
 Gameplay.prototype.update = function() {
-	//
+	this.staminaBar.width = (StaminaBarWidth - 4) * this.player.data.stamina;
 };
